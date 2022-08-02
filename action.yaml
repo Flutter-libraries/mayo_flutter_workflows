@@ -86,7 +86,7 @@ runs:
     - name: Notify on slack release channel
       uses: rtCamp/action-slack-notify@v2
       env:
-        SLACK_CHANNEL: release
+        SLACK_CHANNEL: releases
         SLACK_COLOR: good
         SLACK_ICON: ${{ inputs.slack_icon }}
         SLACK_TITLE: 'New release ${{ steps.get_release.outputs.tag_name }}'
