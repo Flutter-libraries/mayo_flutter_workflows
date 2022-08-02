@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: foo
-        uses: actions/mayo_github_actions@v0.0.2
+        uses: actions/mayo_action_release@v0.0.3
         with:
           environment: staging
           pre-release: true
