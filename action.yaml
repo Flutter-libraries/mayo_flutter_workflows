@@ -98,8 +98,8 @@ runs:
         SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
         SLACK_FOOTER: ${{ inputs.slack_username }} automatic notification
         MSG_MINIMAL: true
-        
-    - id: Set outputs
+
+    - id: set-outputs
       run: |
         echo "::set-output name=changelog_url::$(echo ${{ steps.get_release.outputs.html_url }})"
       shell: bash
