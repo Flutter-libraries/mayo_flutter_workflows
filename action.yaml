@@ -53,7 +53,7 @@ runs:
       uses: charmixer/auto-changelog-action@v1
       with:
         token: ${{ inputs.personal_token }}
-        future_release: ${{ inputs.future_release }}
+        future_release: ${{ inputs.tag }}
         since_tag: ${{ steps.get_latest_release.outputs.release }}
     - name: Upload changelog
       uses: actions/upload-artifact@v2
@@ -94,9 +94,9 @@ runs:
           Version ${{ steps.get_release.outputs.tag_name }} published! :rocket:
 
           Full changelog: ${{ steps.get_release.outputs.html_url }}'
-        SLACK_USERNAME: ${{ inputs.slack_username }}
+        SLACK_USERNAME: ${{ inputs.display_name }}
         SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
-        SLACK_FOOTER: ${{ inputs.slack_username }} automatic notification
+        SLACK_FOOTER: ${{ inputs.display_name }} automatic notification
         MSG_MINIMAL: true
 
     - id: set-outputs
