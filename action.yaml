@@ -39,78 +39,73 @@ outputs:
   changelog_url:
     description: 'Link to full changelog'
 
-jobs:
-  generate-changelog:
-    name: Generate changelog
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get latest published release tag
-        id: get_latest_release
-        uses: rez0n/actions-github-release@main
-        env:
-          token: ${{ inputs.personal_token }}
-          repository: ${{ inputs.repository }}
-          type: "stable"
-      - name: Generate changelog since last published release
-        uses: charmixer/auto-changelog-action@v1
-        with:
-          token: ${{ inputs.personal_token }}
-          future_release: ${{ inputs.future_release }}
-          since_tag: ${{ steps.get_latest_release.outputs.release }}
-      - name: Upload changelog
-        uses: actions/upload-artifact@v2
-        with:
-          name: changelog
-          path: CHANGELOG.md
+runs:
+  using: composite
+  steps:
+    - name: Get latest published release tag
+      id: get_latest_release
+      uses: rez0n/actions-github-release@main
+      env:
+        token: ${{ inputs.personal_token }}
+        repository: ${{ inputs.repository }}
+        type: "stable"
+    - name: Generate changelog since last published release
+      uses: charmixer/auto-changelog-action@v1
+      with:
+        token: ${{ inputs.personal_token }}
+        future_release: ${{ inputs.future_release }}
+        since_tag: ${{ steps.get_latest_release.outputs.release }}
+    - name: Upload changelog
+      uses: actions/upload-artifact@v2
+      with:
+        name: changelog
+        path: CHANGELOG.md
 
-  create-release:
-    name: Create Github release
-    needs: generate-changelog
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Download changelog
-        uses: actions/download-artifact@v2
-        with:
-          name: changelog
-      - name: Draft release with changelog
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ inputs.personal_token }}
-        with:
-          tag_name: ${{ inputs.tag }}
-          release_name: ${{ inputs.display_name }} ${{ inputs.tag }}
-          body_path: CHANGELOG.md
-          draft: false
-          prerelease: ${{ inputs.pre-release }}
+    - name: Download changelog
+      uses: actions/download-artifact@v2
+      with:
+        name: changelog
+    - name: Draft release with changelog
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.personal_token }}
+      with:
+        tag_name: ${{ inputs.tag }}
+        release_name: ${{ inputs.display_name }} ${{ inputs.tag }}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: ${{ inputs.pre-release }}
 
-      - name: Get release
-        id: get_release
-        uses: bruceadams/get-release@v1.2.3
-        env:
-          GITHUB_TOKEN: ${{ inputs.personal_token }}
+    - name: Get release
+      id: get_release
+      uses: bruceadams/get-release@v1.2.3
+      env:
+        GITHUB_TOKEN: ${{ inputs.personal_token }}
 
-      - name: Notify on slack release channel
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: release
-          SLACK_COLOR: good
-          SLACK_ICON: ${{ inputs.slack_icon }}
-          SLACK_TITLE: 'New release ${{ steps.get_release.outputs.tag_name }}'
-          SLACK_MESSAGE: ' > 
-            Version ${{ steps.get_release.outputs.tag_name }} published! :rocket:
+    - name: Notify on slack release channel
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_CHANNEL: release
+        SLACK_COLOR: good
+        SLACK_ICON: ${{ inputs.slack_icon }}
+        SLACK_TITLE: 'New release ${{ steps.get_release.outputs.tag_name }}'
+        SLACK_MESSAGE: ' > 
+          Version ${{ steps.get_release.outputs.tag_name }} published! :rocket:
 
-            Full changelog: ${{ steps.get_release.outputs.html_url }}'
-          SLACK_USERNAME: ${{ inputs.slack_username }}
-          SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
-          SLACK_FOOTER: ${{ inputs.slack_username }} automatic notification
-          MSG_MINIMAL: true
-        run: |
-          echo "::set-output name=changelog_url::$(echo ${{ steps.get_release.outputs.html_url }})"
+          Full changelog: ${{ steps.get_release.outputs.html_url }}'
+        SLACK_USERNAME: ${{ inputs.slack_username }}
+        SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
+        SLACK_FOOTER: ${{ inputs.slack_username }} automatic notification
+        MSG_MINIMAL: true
         
+    - id: Set outputs
+      run: |
+        echo "::set-output name=changelog_url::$(echo ${{ steps.get_release.outputs.html_url }})"
+      shell: bash
+          
 
+          
+          
         
         
-      
-       
