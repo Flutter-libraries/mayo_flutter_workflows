@@ -7,12 +7,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: foo
-        uses: actions/mayo_action_release@v0.0.3
+        uses: Flutter-libraries/mayo_action_release@v0.0.3.staging.2
         with:
+          repository: ${{ github.repository }}
+          tag: ${{ github.ref }}
           environment: staging
           pre-release: true
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          display_name: Mayo Cloud Firestore
           slack_icon: https://mayosoftware.es/wp-content/uploads/2022/08/M.png
-          slack_username: mayo
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
       - run: echo Changelog url ${{ steps.foo.outputs.changelog_url }}

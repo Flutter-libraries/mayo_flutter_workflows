@@ -1,6 +1,12 @@
 name: Deploy flutter app to firebase hosting
 description: Create a release of a flutter app and deploy it to firebase hosting
 inputs:
+  repository:
+    description: Repository
+    required: true
+  tag:
+    description: Future release
+    required: true
   environment:
     type: choice
     description: Environment used
@@ -19,11 +25,11 @@ inputs:
   env_file:
     description: Env file
     required: false
+  display_name:
+    description: Username for slack message
+    required: true
   slack_icon:
     description: Icon for slack message
-    required: false
-  slack_username:
-    description: Username for slack message
     required: false
   slack_webhook:
     description: Webhook for slack message
@@ -43,13 +49,13 @@ jobs:
         uses: rez0n/actions-github-release@main
         env:
           token: ${{ inputs.personal_token }}
-          repository: ${{ github.repository }}
+          repository: ${{ inputs.repository }}
           type: "stable"
       - name: Generate changelog since last published release
         uses: charmixer/auto-changelog-action@v1
         with:
           token: ${{ inputs.personal_token }}
-          future_release: ${{ github.ref }}
+          future_release: ${{ inputs.future_release }}
           since_tag: ${{ steps.get_latest_release.outputs.release }}
       - name: Upload changelog
         uses: actions/upload-artifact@v2
@@ -73,8 +79,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ inputs.personal_token }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: DemoIQ ${{ github.ref }}
+          tag_name: ${{ inputs.tag }}
+          release_name: ${{ inputs.display_name }} ${{ inputs.tag }}
           body_path: CHANGELOG.md
           draft: false
           prerelease: ${{ inputs.pre-release }}
@@ -83,7 +89,7 @@ jobs:
         id: get_release
         uses: bruceadams/get-release@v1.2.3
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ inputs.personal_token }}
 
       - name: Notify on slack release channel
         uses: rtCamp/action-slack-notify@v2
