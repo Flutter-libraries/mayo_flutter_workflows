@@ -25,12 +25,13 @@ inputs:
   slack_username:
     description: Username for slack message
     required: false
+  slack_webhook:
+    description: Webhook for slack message
+    required: true
 
 outputs:
   changelog_url:
     description: 'Link to full changelog'
-  app_url:
-    description: 'Link to deployed app'
 
 jobs:
   generate-changelog:
@@ -96,6 +97,14 @@ jobs:
 
             Full changelog: ${{ steps.get_release.outputs.html_url }}'
           SLACK_USERNAME: ${{ inputs.slack_username }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
           SLACK_FOOTER: ${{ inputs.slack_username }} automatic notification
           MSG_MINIMAL: true
+        run: |
+          echo "::set-output name=changelog_url::$(echo ${{ steps.get_release.outputs.html_url }})"
+        
+
+        
+        
+      
+       

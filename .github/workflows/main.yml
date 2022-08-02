@@ -1,0 +1,18 @@
+on: [push]
+
+jobs:
+  create-prerelease:
+    runs-on: ubuntu-latest
+    name: A job create pre-release and notify by slack
+    steps:
+      - uses: actions/checkout@v3
+      - id: foo
+        uses: actions/mayo_github_actions@v0.0.2
+        with:
+          environment: staging
+          pre-release: true
+          personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          slack_icon: https://mayosoftware.es/wp-content/uploads/2022/08/M.png
+          slack_username: mayo
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+      - run: echo Changelog url ${{ steps.foo.outputs.changelog_url }}
