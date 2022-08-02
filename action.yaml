@@ -1,0 +1,101 @@
+name: Deploy flutter app to firebase hosting
+description: Create a release of a flutter app and deploy it to firebase hosting
+inputs:
+  environment:
+    type: choice
+    description: Environment used
+    required: true
+    options:
+      - staging
+      - production
+  pre-release:
+    description: Indicates if the release is a pre-release
+    required: true
+    type: boolean
+    default: true
+  personal_token:
+    description: Personal token on github
+    required: true
+  env_file:
+    description: Env file
+    required: false
+  slack_icon:
+    description: Icon for slack message
+    required: false
+  slack_username:
+    description: Username for slack message
+    required: false
+
+outputs:
+  changelog_url:
+    description: 'Link to full changelog'
+  app_url:
+    description: 'Link to deployed app'
+
+jobs:
+  generate-changelog:
+    name: Generate changelog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest published release tag
+        id: get_latest_release
+        uses: rez0n/actions-github-release@main
+        env:
+          token: ${{ inputs.personal_token }}
+          repository: ${{ github.repository }}
+          type: "stable"
+      - name: Generate changelog since last published release
+        uses: charmixer/auto-changelog-action@v1
+        with:
+          token: ${{ inputs.personal_token }}
+          future_release: ${{ github.ref }}
+          since_tag: ${{ steps.get_latest_release.outputs.release }}
+      - name: Upload changelog
+        uses: actions/upload-artifact@v2
+        with:
+          name: changelog
+          path: CHANGELOG.md
+
+  create-release:
+    name: Create Github release
+    needs: generate-changelog
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download changelog
+        uses: actions/download-artifact@v2
+        with:
+          name: changelog
+      - name: Draft release with changelog
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ inputs.personal_token }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: DemoIQ ${{ github.ref }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: ${{ inputs.pre-release }}
+
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify on slack release channel
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: release
+          SLACK_COLOR: good
+          SLACK_ICON: ${{ inputs.slack_icon }}
+          SLACK_TITLE: 'New release ${{ steps.get_release.outputs.tag_name }}'
+          SLACK_MESSAGE: ' > 
+            Version ${{ steps.get_release.outputs.tag_name }} published! :rocket:
+
+            Full changelog: ${{ steps.get_release.outputs.html_url }}'
+          SLACK_USERNAME: ${{ inputs.slack_username }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_FOOTER: ${{ inputs.slack_username }} automatic notification
+          MSG_MINIMAL: true
